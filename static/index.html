@@ -1,0 +1,71 @@
+<!-- joguei no chatgpt para fazer algo simples para ter a ideia do html, ou o que for usar -->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Meu Chatbot Legal</title>
+    <style>
+        #chatOutput { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: scroll; background-color: #f9f9f9; }
+        input { width: 300px; padding: 5px; border-radius: 5px; }
+        button { padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+    <h1>Chattinnn<h1>
+    <div id="chatOutput">
+        <p>Bot: Oi! Bem-vindo ao meu chatbot. Estou pronto pra ajudar. Digite algo!</p>
+    </div>
+    <input type="text" id="userInput" placeholder="Digite sua mensagem">
+    <button onclick="sendMessage()">Enviar</button>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('userInput').value;
+            if (!input) return;
+
+            const chatOutput = document.getElementById('chatOutput');
+            chatOutput.innerHTML += `<p>Você: ${input}</p>`;
+
+            try {
+                const response = await fetch('http://192.168.15.5:5000/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: input })
+                });
+                const data = await response.json();
+                chatOutput.innerHTML += `<p>Bot: ${data.response}</p>`;
+            } catch (error) {
+                chatOutput.innerHTML += `<p>Erro: ${error.message}</p>`;
+            }
+
+            document.getElementById('userInput').value = '';
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+        }
+
+        async function loadMessages() {
+            try {
+                const response = await fetch('http://192.168.15.5:5000/messages');
+                const messages = await response.json();
+                const chatOutput = document.getElementById('chatOutput');
+                messages.forEach(msg => {
+                    chatOutput.innerHTML += `<p>Você: ${msg.user_message}</p>`;
+                    if (msg.bot_response) {
+                        chatOutput.innerHTML += `<p>Bot: ${msg.bot_response}</p>`;
+                    }
+                });
+                chatOutput.scrollTop = chatOutput.scrollHeight;
+            } catch (error) {
+                console.error('Oops, erro ao carregar mensagens:', error);
+            }
+        }
+
+        window.onload = loadMessages;
+
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
